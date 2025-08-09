@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>MapTruth AI</title>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; max-width: 700px; margin: auto; }
+        input, button { padding: 10px; font-size: 16px; margin-top: 10px; }
+        .result { margin-top: 20px; border-top: 1px solid #ccc; padding-top: 15px; }
+        .review { border: 1px solid #ddd; padding: 10px; margin-top: 10px; border-radius: 5px; }
+    </style>
+</head>
+<body>
+    <h1>MapTruth AI</h1>
+    <input type="text" id="urlInput" placeholder="Enter Google Maps URL" style="width: 100%;">
+    <button onclick="analyzePlace()">Analyze</button>
+
+    <div id="results" class="result"></div>
+
+    <script>
+        async function analyzePlace() {
+            const url = document.getElementById('urlInput').value;
+            document.getElementById('results').innerHTML = "Analyzing...";
+
+            try {
+                const response = await fetch("http://localhost:8000/analyze", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ url })
+                });
+                const data = await response.json();
+
+                if (!data.success) {
+                    document.getElementById('results').innerHTML = "Error: " + data.error;
+                    return;
+                }
+
+                let html = `
+                    <h2>${data.place_details.place_name}</h2>
+                    <p><b>Address:</b> ${data.place_details.address}</p>
+                    <p><b>Rating:</b> ${data.place_details.rating} ⭐ (${data.place_details.total_reviews} reviews)</p>
+                    <h3>Review Analysis</h3>
+                `;
+
+                data.reviews_analysis.forEach(r => {
+                    html += `
+                        <div class="review">
+                            <p><b>Reviewer:</b> ${r.reviewer}</p>
+                            <p><b>Sentiment:</b> ${r.sentiment}</p>
+                            <p><b>Specificity:</b> ${r.specificity}</p>
+                            <p><b>Authenticity Score:</b> ${r.authenticity_score}</p>
+                            <p><b>Category:</b> ${r.category}</p>
+                            <p><b>Recommendation:</b> ${r.recommendation}</p>
+                            <p><b>Summary:</b> ${r.summary}</p>
+                            <p><i>${r.original_review}</i></p>
+                        </div>
+                    `;
+                });
+
+                document.getElementById('results').innerHTML = html;
+
+            } catch (err) {
+                document.getElementById('results').innerHTML = "Error: " + err;
+            }
+        }
+    </script>
+</body>
+</html>

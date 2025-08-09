@@ -1,0 +1,8 @@
+requests
+python-dotenv
+googlemaps
+langchain
+langchain-ollama
+fastapi
+uvicorn[standard]
+pydantic
