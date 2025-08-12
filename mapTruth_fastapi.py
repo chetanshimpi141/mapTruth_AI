@@ -4,7 +4,7 @@ import requests
 import json
 import time
 from dotenv import load_dotenv
-from langchain_ollama import OllamaLLM
+from langchain_community.llms import Ollama
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
@@ -17,7 +17,7 @@ load_dotenv()
 GOOGLE_MAPS_API_KEY = os.getenv("GOOGLE_MAPS_API_KEY")
 
 # Initialize Ollama LLM
-llm = OllamaLLM(model="gemma2:2b", base_url="http://localhost:11434",temperature=0.2)
+llm = Ollama(model="gemma2:2b", base_url="http://localhost:11434", temperature=0.2)
 
 # Initialize FastAPI app
 app = FastAPI(
@@ -130,45 +130,30 @@ def fetch_place_details(place_id: str, api_key: str) -> Optional[Dict[str, Any]]
 
 def analyze_review(review_text: str, reviewer_name: str = "Anonymous") -> str:
     """Analyze review using Ollama"""
-    prompt = f"""
-You are a review analysis expert
-Analyze the following Google Maps review and determine:
+    prompt = f"""You are a senior analyst specializing in Google Maps location reviews.
 
-1. sentiment → one of: "positive", "negative", or "neutral"
-2. specificity → one of: "high", "medium", or "low"
-3. authenticity_score → integer from 1 to 5, where:
-   a. Sentiment 
-   b. specificity 
-Or
-   + Sentiment 
-   + Specificity   
-4. category → exactly one of: "Fake" or "Not Fake"
-5. recommendation → exactly one of: "Go" or "Avoid"
-6. summary → a short one-sentence reason for your decision
+Analyze the following review text:
 
-Reviewer: "{reviewer_name}"
-Review: "{review_text}"
+\"\"\"{review_text}\"\"\"
 
-Rules:
-- Output must be **valid JSON only**.
-- Do not include extra commentary, explanations, or text outside JSON.
-- Always pick exactly one category ("Fake" or "Not Fake").
-- Always pick exactly one recommendation ("Go" or "Avoid").
+Reviewer name: "{reviewer_name}"
 
-Expected JSON format:
+Return the analysis **strictly as JSON** in this format:
 {{
-    "reviewer": "{reviewer_name}",
-    "sentiment": "positive|negative|neutral",
-    "specificity": "high|medium|low",
-    "authenticity_score": 1-5,
-    "category": "Fake" or "Not Fake",
-    "recommendation": "Go" or "Avoid",
-    "summary": "brief explanation"
+  "reviewer": "{reviewer_name}",
+  "sentiment": "positive|negative|neutral",
+  "specificity": "high|medium|low",
+  "authenticity_score": 1-5,
+  "category": "Fake" or "Not Fake",
+  "recommendation": "Go" or "Avoid",
+  "summary": "brief explanation"
 }}
+
+Only output valid JSON, no extra commentary.
 """
     try:
         response = llm.invoke(prompt)
-        return response
+        return response.strip()
     except Exception as e:
         print(f"Error analyzing review with Ollama: {e}")
         return json.dumps({"error": str(e)})
@@ -231,7 +216,9 @@ async def analyze_place(request: URLRequest):
                 analysis = analyze_review(review_text, reviewer_name)
                 
                 try:
-                    parsed_analysis = json.loads(analysis)
+                    # Strip possible Markdown code block fences before parsing
+                    cleaned_analysis = re.sub(r"```(?:json)?\s*|\s*```", "", analysis).strip()
+                    parsed_analysis = json.loads(cleaned_analysis)
                 except:
                     parsed_analysis = {
                         "reviewer": reviewer_name,
@@ -267,6 +254,7 @@ async def analyze_place(request: URLRequest):
         raise
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Internal server error: {str(e)}")
+
 
 @app.post("/analyze-text")
 async def analyze_review_text(review_text: str, reviewer_name: str = "Anonymous"):

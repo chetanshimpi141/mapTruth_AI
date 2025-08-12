@@ -3,15 +3,78 @@
 <head>
     <title>MapTruth AI</title>
     <style>
-        body { font-family: Arial, sans-serif; padding: 20px; max-width: 700px; margin: auto; }
-        input, button { padding: 10px; font-size: 16px; margin-top: 10px; }
-        .result { margin-top: 20px; border-top: 1px solid #ccc; padding-top: 15px; }
-        .review { border: 1px solid #ddd; padding: 10px; margin-top: 10px; border-radius: 5px; }
+        /* Dark Mode Base */
+        body { 
+            font-family: Arial, sans-serif; 
+            padding: 20px; 
+            max-width: 700px; 
+            margin: auto; 
+            background-color: #121212;
+            color: #e0e0e0;
+        }
+
+        /* Input and Buttons */
+        input, button { 
+            padding: 10px; 
+            font-size: 16px; 
+            margin-top: 10px; 
+            border: none;
+            border-radius: 5px;
+        }
+
+        input { 
+            width: 100%; 
+            background-color: #1f1f1f; 
+            color: #fff;
+            border: 1px solid #333;
+        }
+
+        button { 
+            background-color: #3a86ff; 
+            color: white; 
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+
+        button:hover { 
+            background-color: #265dbe;
+        }
+
+        /* Results Section */
+        .result { 
+            margin-top: 20px; 
+            border-top: 1px solid #333; 
+            padding-top: 15px; 
+        }
+
+        /* Review Cards */
+        .review { 
+            background-color: #1e1e1e; 
+            border: 1px solid #333; 
+            padding: 10px; 
+            margin-top: 10px; 
+            border-radius: 8px;
+            box-shadow: 0px 0px 8px rgba(0,0,0,0.5);
+        }
+
+        /* Highlight Key Data */
+        .review b { 
+            color: #ffd166;
+        }
+
+        /* Place Details */
+        h1, h2, h3 { 
+            color: #f4f4f4;
+        }
+
+        i { 
+            color: #bbb;
+        }
     </style>
 </head>
 <body>
     <h1>MapTruth AI</h1>
-    <input type="text" id="urlInput" placeholder="Enter Google Maps URL" style="width: 100%;">
+    <input type="text" id="urlInput" placeholder="Enter Google Maps URL">
     <button onclick="analyzePlace()">Analyze</button>
 
     <div id="results" class="result"></div>
